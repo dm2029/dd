@@ -1,0 +1,80 @@
+worker_processes  2;
+user root;
+events {
+    worker_connections  1024;
+}
+
+http {
+    include     /etc/nginx/mime.types;
+    include     /etc/nginx/resolver.conf;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"' ' $request_time '
+                      'REQUESTED_HOST "$http_host" '
+                      'SSL "$ssl_client_verify" "-" "-" "-" "$ssl_client_fingerprint" '
+                      'UPSTREAM "$upstream_addr" "$upstream_status" "$upstream_response_time" "$upstream_cache_status" '
+                      'REQGUID "$http_request_guid" SESSGUID "$http_session_guid"';
+
+    access_log  /var/log/nginx/access.log  main;
+    ###################################################################
+    # Connection settings
+    ###################################################################
+
+    sendfile        on;
+    tcp_nopush           on;
+    tcp_nodelay          on;
+    keepalive_timeout    65s;
+    send_timeout         180;
+
+    gzip                 on;
+    gzip_buffers     16  8k;
+    gzip_comp_level       9;
+    gzip_types
+      text/xml
+      text/css
+      text/plain
+      text/javascript
+      application/javascript
+      application/x-javascript
+      application/atom+xml
+      application/xml+rss
+      application/xhtml+xml;
+
+    ###################################################################
+    # Common settings
+    ###################################################################
+    uninitialized_variable_warn off;
+    proxy_ignore_client_abort on;
+    client_header_buffer_size 32k;
+    large_client_header_buffers 4 64k;
+    client_body_buffer_size 50M;
+    client_max_body_size 50M;
+
+    server {
+        listen       80;
+        server_name  dd.dm2029;
+        autoindex off;
+
+        # proxy_set_header            Host $host:8080;
+  	# proxy_set_header            X-Real-IP $remote_addr;
+        # proxy_set_header            X-Forwarded-for $remote_addr;
+	# proxy_set_header            X-Forwared-For  $proxy_add_x_forwarded_for;
+
+        set $source /usr/share/nginx/html;
+        root $source/;
+        index index.html;
+
+        location / {
+            alias $source/;
+            index index.html;
+        }
+
+        location /sort/ {
+            alias $source/sort/;
+            index index.html;
+            # try_files $uri $uri/ @backend;
+        }
+    }
+}

@@ -1,0 +1,13 @@
+[template]
+prefix = "/"
+src = "nginx.tmpl"
+dest = "/etc/nginx/nginx.conf"
+owner = "root"
+group = "root"
+mode = "0644"
+# keys = [
+#   "/stands",
+#   "/config",
+# ]
+check_cmd = "/usr/sbin/nginx -t -c {{.src}}"
+reload_cmd = "nginx -s reload"
